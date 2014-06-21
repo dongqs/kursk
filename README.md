@@ -1,10 +1,13 @@
-run redis
+## run redis
 
-run server
+## run server
+
     ruby server.rb -o 0.0.0.0
 
-run core
+## run core
+
     ruby core.rb
 
-open in browser
+## open in browser
+
     http://localhost:4567/
