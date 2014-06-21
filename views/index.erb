@@ -1,0 +1,159 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>pixi.js example 1</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #000000;
+    }
+  </style>
+  <script src="/pixi.js"></script>
+  <script src="/jquery-2.1.1.min.js"></script>
+</head>
+<body>
+  <script>
+
+    var stage = new PIXI.Stage(0x66FF99);
+    var renderer = PIXI.autoDetectRenderer(800,600);
+
+    document.body.appendChild(renderer.view);
+
+    requestAnimFrame( animate );
+
+    var tanks = new Object();
+    var missiles = new Object();
+
+    var tank_texture = PIXI.Texture.fromImage("/tank.jpg");
+    var missile_texture = PIXI.Texture.fromImage("/missile.jpg");
+
+    var x = 0.0;
+    var y = 0.0;
+    var ax = 0.0;
+    var ay = 0.0;
+    var dx = 0;
+    var dy = 0;
+    var firing = 0;
+
+    var queries = location.search.substring(1).split('&');
+    var params = new Object();
+    for (var i in queries) {
+        var this_param = queries[i];
+        var eq_pos = this_param.search('=');
+        if (eq_pos > 0) {
+            params[this_param.substring(0, eq_pos)] = decodeURI(this_param.substring(eq_pos+1));
+        };
+    };
+
+    var name = params["name"];
+
+    function animate() {
+      requestAnimFrame( animate );
+
+      $.ajax({
+        url: "/move",
+        async: false,
+        dataType: "json",
+        data: {
+          name: name,
+          ax: ax,
+          ay: ay,
+          dx: dx,
+          dy: dy,
+          firing: firing,
+        }
+      }).done(function(event) {
+
+        tanks_info = event.tanks;
+        for (var i=0;i<tanks_info.length;i++) {
+          info = tanks_info[i];
+          tank = tanks[info["name"]];
+          if (info.name == name) {
+            x = info.x;
+            y = info.y;
+          }
+
+          if (tank) {
+            tank.position.x = info.x;
+            tank.position.y = info.y;
+          } else {
+            var tank = new PIXI.Sprite(tank_texture);
+
+            tank.anchor.x = 0.5;
+            tank.anchor.y = 0.5;
+
+            tank.position.x = info.x;
+            tank.position.y = info.y;
+
+            stage.addChild(tank);
+            tanks[info.name] = tank;
+          }
+        }
+
+        missiles_info = event.missiles;
+        for (var i=0;i<missiles_info.length;i++) {
+          info = missiles_info[i];
+          missile = missiles[info["name"]];
+          if (info.name == name) {
+            x = info.x;
+            y = info.y;
+          }
+
+          if (missile) {
+            missile.position.x = info.x;
+            missile.position.y = info.y;
+          } else {
+            var missile = new PIXI.Sprite(missile_texture);
+
+            missile.anchor.x = 0.5;
+            missile.anchor.y = 0.5;
+
+            missile.position.x = info.x;
+            missile.position.y = info.y;
+
+            stage.addChild(missile);
+            missiles[info.name] = missile;
+          }
+        }
+      });
+
+      renderer.render(stage);
+    }
+
+    $("body").keydown(function(event) {
+      if (event.keyCode == 87) {
+        ay = -1.0
+      } else if (event.keyCode == 65) {
+        ax = -1.0
+      } else if (event.keyCode == 83) {
+        ay = 1.0
+      } else if (event.keyCode == 68) {
+        ax = 1.0
+      }
+    });
+    $("body").keyup(function(event) {
+      if (event.keyCode == 87) {
+        ay = 0.0
+      } else if (event.keyCode == 65) {
+        ax = 0.0
+      } else if (event.keyCode == 83) {
+        ay = 0.0
+      } else if (event.keyCode == 68) {
+        ax = 0.0
+      }
+    });
+    $("body").mousemove(function(event) {
+        dx = event.pageX - x;
+        dy = event.pageY - y;
+    });
+    $("body").mousedown(function(event) {
+      firing = 1;
+    });
+    $("body").mouseup(function(event) {
+      firing = 0;
+    });
+
+  </script>
+  </body>
+</html>
