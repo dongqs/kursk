@@ -8,13 +8,15 @@ MAX_X = 800
 MIN_Y = 0
 MAX_Y = 600
 FIRE_PAUSE = 1.0
+TANK_A = 100
+MISSILE_V = 100
 
 n = 0
 last_n = 0
 
+
 loop do
   now = Time.new
-
   period = now - time
 
   tank_names = redis.smembers "tanks"
@@ -27,8 +29,8 @@ loop do
       next
     end
 
-    ax = tank["ax"].to_f * 1000
-    ay = tank["ay"].to_f * 1000
+    ax = tank["ax"].to_f * TANK_A
+    ay = tank["ay"].to_f * TANK_A
 
     vx = tank["vx"].to_f + period * ax
     vy = tank["vy"].to_f + period * ay
@@ -72,12 +74,6 @@ loop do
         dy = tank["dy"].to_f
         dl = Math.sqrt(dx * dx + dy * dy)
 
-        if dl > 0
-          puts "fire in the hole"
-        else
-          puts "missile failed"
-        end
-
         dx = dx / dl
         dy = dy / dl
 
@@ -87,6 +83,7 @@ loop do
         redis.sadd "missiles", missile
         mkey = "missile:#{missile}"
 
+        redis.hset key, "firing", 0
         redis.hset mkey, "x", x
         redis.hset mkey, "y", y
         redis.hset mkey, "dx", dx
@@ -113,11 +110,10 @@ loop do
     dx = missile["dx"].to_f
     dy = missile["dy"].to_f
 
-    x += dx * 100 * period
-    y += dy * 100 * period
+    x += dx * MISSILE_V * period
+    y += dy * MISSILE_V * period
 
     if x < MIN_X or x > MAX_X or y < MIN_Y or y > MAX_Y
-      puts "broken"
       redis.srem "missiles", name
       redis.del key
     else
@@ -126,14 +122,12 @@ loop do
     end
   end
 
-  sleep 0.01
-
   if now.to_f.round - time.to_f.round > 0
     puts "#{n - last_n} #{tank_names.length} #{missile_names.length}"
     last_n = n
   end
 
   time = now
-
   n += 1
+  sleep 0.01
 end
