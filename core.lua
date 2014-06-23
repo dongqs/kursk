@@ -1,10 +1,8 @@
-require 'redis'
-require 'json'
-
-script = <<EOF
 local now = tonumber(ARGV[1])
 local period = tonumber(ARGV[2])
 
+local default_x = 400
+local default_y = 300
 local min_x = 0
 local max_x = 800
 local min_y = 0
@@ -12,6 +10,7 @@ local max_y = 600
 local fire_pause = 1.0
 local tank_a = 100
 local missile_v = 100
+local hit_ll = 25
 
 local tank_names = redis.call('keys', 'tank:*')
 local tanks = {}
@@ -81,8 +80,8 @@ for i, name in pairs(tank_names) do
         redis.call("hset", name, "fired_at", now)
         redis.call("hset", name, "firing", 0)
 
-        redis.call("hset", missile, "x", x)
-        redis.call("hset", missile, "y", y)
+        redis.call("hset", missile, "x", x + dx * 10)
+        redis.call("hset", missile, "y", y + dy * 10)
         redis.call("hset", missile, "dx", dx)
         redis.call("hset", missile, "dy", dy)
       end
@@ -111,6 +110,16 @@ for i, name in pairs(missile_names) do
     missile["y"] = y
     missiles[name] = missile
   end
+
+  for tank_name, tank in pairs(tanks) do
+    local lx = x - tank["x"]
+    local ly = y - tank["y"]
+    if lx * lx + ly * ly < hit_ll then
+      redis.call("hset", tank_name, "x", default_x)
+      redis.call("hset", tank_name, "y", default_y)
+      break
+    end
+  end
 end
 
 local result = {}
@@ -120,27 +129,3 @@ result['missiles'] = missiles
 redis.call("setex", "result", 60, cjson.encode(result))
 
 return(table.getn(tank_names) .. ' ' .. table.getn(missile_names))
-EOF
-
-redis = Redis.new
-
-n = 0
-last_n = 0
-
-time = Time.new
-now = Time.new
-
-loop do
-  n += 1
-  time = now
-  now = Time.new
-  period = now - time
-
-  result = redis.eval script, [], [now.to_f, period.to_f]
-
-#  sleep 0.01
-  if now.to_f.round - time.to_f.round > 0
-    puts "#{n - last_n} #{result}"
-    last_n = n
-  end
-end
