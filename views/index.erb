@@ -48,6 +48,8 @@
 
     var name = params["name"];
 
+    var flag = true;
+
     function animate() {
       requestAnimFrame( animate );
 
@@ -65,11 +67,17 @@
         }
       }).done(function(event) {
 
+        if (flag) {
+          console.log(event)
+          flag = false
+        }
+
         tanks_info = event.tanks;
-        for (var i=0;i<tanks_info.length;i++) {
-          info = tanks_info[i];
-          tank = tanks[info["name"]];
-          if (info.name == name) {
+        for (var tank_name in tanks_info) {
+          info = tanks_info[tank_name];
+          tank = tanks[tank_name];
+
+          if (tank_name == "tank:" + name) {
             x = info.x;
             y = info.y;
           }
@@ -87,18 +95,14 @@
             tank.position.y = info.y;
 
             stage.addChild(tank);
-            tanks[info.name] = tank;
+            tanks[tank_name] = tank;
           }
         }
 
         missiles_info = event.missiles;
-        for (var i=0;i<missiles_info.length;i++) {
-          info = missiles_info[i];
-          missile = missiles[info["name"]];
-          if (info.name == name) {
-            x = info.x;
-            y = info.y;
-          }
+        for (missile_name in missiles_info) {
+          info = missiles_info[missile_name];
+          missile = missiles[missile_name];
 
           if (missile) {
             missile.position.x = info.x;
@@ -113,7 +117,7 @@
             missile.position.y = info.y;
 
             stage.addChild(missile);
-            missiles[info.name] = missile;
+            missiles[missile_name] = missile;
           }
         }
       });

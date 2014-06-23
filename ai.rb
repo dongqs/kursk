@@ -1,6 +1,10 @@
 require 'rest-client'
 
-n = 5
+n = (ARGV[0] || 5).to_i
+s = (ARGV[1] || 1).to_f
+
+puts "ai number: #{n}"
+
 
 ais = {}
 (0...n).to_a.each {
@@ -9,9 +13,15 @@ ais = {}
   ais[name] = offset
 }
 
+time = Time.new
+now = Time.new
+
 loop do
-  sleep 1
-  t = Time.new.to_f
+  time = now
+  now = Time.new
+  puts now - time
+
+  t = now.to_f
 
   ais.each do |name, offset|
     begin
@@ -23,8 +33,11 @@ loop do
           dy: Math.cos(t + offset + rand),
           firing: 1,
       }
-    rescue
-      puts "connection lost"
+    rescue => exc
+      puts exc.to_s
+      raise
     end
   end
+
+  sleep s
 end

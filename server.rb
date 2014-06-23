@@ -19,6 +19,7 @@ get '/status' do
 end
 
 get '/move' do
+  time = Time.new
   name = params[:name]
 
   key = "tank:#{name}"
@@ -28,6 +29,9 @@ get '/move' do
   if redis.hgetall(key).empty?
     redis.hset key, "x", 400
     redis.hset key, "y", 300
+    redis.hset key, "vx", 0
+    redis.hset key, "vy", 0
+    redis.hset key, "fired_at", time.to_f
   end
 
   ax = params[:ax].to_f
@@ -44,30 +48,11 @@ get '/move' do
   redis.hset key, "ay", ay / al
   redis.hset key, "dx", dx / dl
   redis.hset key, "dy", dy / dl
-  redis.hset key, "firing", params[:firing]
+  redis.hset key, "firing", params[:firing].to_i # as the symbol of finishing of initialze, do not hset after this line
 
   redis.expire key, 60
 
-  tank = redis.hgetall key
+  result = redis.get "result"
 
-  tank_names = redis.smembers "tanks"
-  missile_names = redis.smembers "missiles"
-  {
-    tanks: tank_names.map { |name|
-      tank = redis.hgetall "tank:#{name}"
-      {
-        name: name,
-        x: tank["x"].to_f,
-        y: tank["y"].to_f,
-      }
-    },
-    missiles: missile_names.map { |name|
-      missile = redis.hgetall "missile:#{name}"
-      {
-        name: name,
-        x: missile["x"].to_f,
-        y: missile["y"].to_f,
-      }
-    }
-  }.to_json
+  result
 end

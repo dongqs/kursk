@@ -83,19 +83,22 @@ loop do
         redis.sadd "missiles", missile
         mkey = "missile:#{missile}"
 
-        redis.hset key, "firing", 0
-        redis.hset mkey, "x", x
-        redis.hset mkey, "y", y
-        redis.hset mkey, "dx", dx
-        redis.hset mkey, "dy", dy
+        redis.pipelined do
+          redis.hset key, "firing", 0
+          redis.hset mkey, "x", x
+          redis.hset mkey, "y", y
+          redis.hset mkey, "dx", dx
+          redis.hset mkey, "dy", dy
+        end
       end
     end
 
-    redis.hset key, "vx", vx
-    redis.hset key, "vy", vy
-
-    redis.hset key, "x", x
-    redis.hset key, "y", y
+    redis.pipelined do
+      redis.hset key, "vx", vx
+      redis.hset key, "vy", vy
+      redis.hset key, "x", x
+      redis.hset key, "y", y
+    end
 
 #    puts "#{now} #{name}: #{ax.round(3)},#{ay.round(3)} #{vx.round(3)},#{vy.round(3)} #{x.round(3)},#{y.round(3)}"
   end
@@ -127,7 +130,7 @@ loop do
     last_n = n
   end
 
+  sleep 1
   time = now
   n += 1
-  sleep 0.01
 end
