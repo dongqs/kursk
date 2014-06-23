@@ -6,7 +6,11 @@
 
 ## run core
 
-    ruby core.rb
+    ruby engine.rb
+
+## run ai
+
+    ruby ai.rb
 
 ## open in browser
 
