@@ -15,22 +15,23 @@ local hit_ll = 100
 local tank_names = redis.call('keys', 'tank:*')
 local tanks = {}
 for i, name in pairs(tank_names) do
+
+  local x = tonumber(redis.call('hget', name, 'x'))
+  local y = tonumber(redis.call('hget', name, 'y'))
+  local vx = tonumber(redis.call('hget', name, 'vx'))
+  local vy = tonumber(redis.call('hget', name, 'vy'))
+  local ax = tonumber(redis.call('hget', name, 'ax'))
+  local ay = tonumber(redis.call('hget', name, 'ay'))
+  local dx = tonumber(redis.call('hget', name, 'dx'))
+  local dy = tonumber(redis.call('hget', name, 'dy'))
+  local fired_at = tonumber(redis.call('hget', name, 'fired_at'))
   local firing = redis.call('hget', name, 'firing')
 
   if firing then
 
-    firing = tonumber(firing)
-
     local tank = {}
-    local x = tonumber(redis.call('hget', name, 'x'))
-    local y = tonumber(redis.call('hget', name, 'y'))
-    local vx = tonumber(redis.call('hget', name, 'vx'))
-    local vy = tonumber(redis.call('hget', name, 'vy'))
-    local ax = tonumber(redis.call('hget', name, 'ax'))
-    local ay = tonumber(redis.call('hget', name, 'ay'))
-    local dx = tonumber(redis.call('hget', name, 'dx'))
-    local dy = tonumber(redis.call('hget', name, 'dy'))
-    local fired_at = tonumber(redis.call('hget', name, 'fired_at'))
+
+    firing = tonumber(firing)
 
     ax = ax * tank_a
     ay = ay * tank_a
@@ -69,6 +70,8 @@ for i, name in pairs(tank_names) do
     redis.call("hset", name, "x", x)
     redis.call("hset", name, "y", y)
 
+    tank['kill'] = tonumber(redis.call("get", "kill:" .. name))
+    tank['die'] = tonumber(redis.call("get", "die:" .. name))
     tank['x'] = x
     tank['y'] = y
     tanks[name] = tank
@@ -84,6 +87,7 @@ for i, name in pairs(tank_names) do
         redis.call("hset", missile, "y", y + dy * 10)
         redis.call("hset", missile, "dx", dx)
         redis.call("hset", missile, "dy", dy)
+        redis.call("hset", missile, "by", name)
       end
     end
   end
@@ -109,15 +113,21 @@ for i, name in pairs(missile_names) do
     missile["x"] = x
     missile["y"] = y
     missiles[name] = missile
-  end
 
-  for tank_name, tank in pairs(tanks) do
-    local lx = x - tank["x"]
-    local ly = y - tank["y"]
-    if lx * lx + ly * ly < hit_ll then
-      redis.call("hset", tank_name, "x", default_x)
-      redis.call("hset", tank_name, "y", default_y)
-      break
+    for tank_name, tank in pairs(tanks) do
+
+      local lx = x - tank["x"]
+      local ly = y - tank["y"]
+
+      if lx * lx + ly * ly < hit_ll then
+
+        local killer_name = redis.call("hget", name, "by")
+        redis.call("incr", "kill:" .. killer_name)
+        redis.call("incr", "die:" .. tank_name)
+        redis.call("hset", tank_name, "x", default_x)
+        redis.call("hset", tank_name, "y", default_y)
+        break
+      end
     end
   end
 end

@@ -50,7 +50,7 @@ get '/move' do
   redis.hset key, "dy", dy / dl
   redis.hset key, "firing", params[:firing].to_i # as the symbol of finishing of initialze, do not hset after this line
 
-  redis.expire key, 60
+  redis.expire key, 5
 
   result = redis.get "result"
 
