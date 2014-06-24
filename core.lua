@@ -3,6 +3,8 @@ local period = tonumber(ARGV[2])
 
 local default_x = 0
 local default_y = 0
+local default_vx = 0
+local default_vy = 0
 local min_x = 0
 local max_x = 800
 local min_y = 0
@@ -10,7 +12,7 @@ local max_y = 600
 local fire_pause = 0.2
 local tank_a = 200
 local missile_v = 300
-local hit_ll = 100
+local hit_ll = 400
 
 local tank_names = redis.call('keys', 'tank:*')
 local tanks = {}
@@ -126,6 +128,8 @@ for i, name in pairs(missile_names) do
         redis.call("incr", "die:" .. tank_name)
         redis.call("hset", tank_name, "x", default_x)
         redis.call("hset", tank_name, "y", default_y)
+        redis.call("hset", tank_name, "vx", default_vx)
+        redis.call("hset", tank_name, "vy", default_vy)
         break
       end
     end
