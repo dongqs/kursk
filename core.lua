@@ -72,9 +72,9 @@ for i, name in pairs(tank_names) do
     redis.call("hset", name, "x", x)
     redis.call("hset", name, "y", y)
 
-    tank['fire'] = tonumber(redis.call("get", "fire:" .. name))
-    tank['kill'] = tonumber(redis.call("get", "kill:" .. name))
-    tank['die'] = tonumber(redis.call("get", "die:" .. name))
+    tank['fire'] = tonumber(redis.call("get", "fire:" .. name)) or 0
+    tank['kill'] = tonumber(redis.call("get", "kill:" .. name)) or 0
+    tank['die'] = tonumber(redis.call("get", "die:" .. name)) or 0
     tank['x'] = x
     tank['y'] = y
     tanks[name] = tank
