@@ -85,8 +85,8 @@ for i, name in pairs(tank_names) do
         redis.call("hset", name, "fired_at", now)
         redis.call("hset", name, "firing", 0)
 
-        redis.call("hset", missile, "x", x + dx * 10)
-        redis.call("hset", missile, "y", y + dy * 10)
+        redis.call("hset", missile, "x", x + dx * 30)
+        redis.call("hset", missile, "y", y + dy * 30)
         redis.call("hset", missile, "dx", dx)
         redis.call("hset", missile, "dy", dy)
         redis.call("hset", missile, "by", name)
