@@ -3,11 +3,15 @@ require 'json'
 require 'redis'
 
 get '/' do
+  erb :index
+end
+
+get '/fight' do
   if params[:name]
-    erb :index
+    erb :fight
   else
     name = (0...4).to_a.map { ('a'..'z').to_a.sample }.join
-    redirect "/?name=#{name}"
+    redirect "/fight?name=#{name}"
   end
 end
 
